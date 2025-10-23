@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Finance Tracker - Modern Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .income-icon { background: linear-gradient(135deg, #4CAF50, #45a049); }
+        .expense-icon { background: linear-gradient(135deg, #f44336, #d32f2f); }
+        .savings-icon { background: linear-gradient(135deg, #2196F3, #1976D2); }
+        .budget-icon { background: linear-gradient(135deg, #FF9800, #F57C00); }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .income-amount { color: #4CAF50; }
+        .expense-amount { color: #f44336; }
+        .savings-amount { color: #2196F3; }
+        .budget-amount { color: #FF9800; }
+
+        .change {
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .positive { background: #E8F5E8; color: #4CAF50; }
+        .negative { background: #FFEBEE; color: #f44336; }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .transactions-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .transaction-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .form-group input, .form-group select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .transactions-table th,
+        .transactions-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .transactions-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .transaction-type {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .type-income {
+            background: #E8F5E8;
+            color: #4CAF50;
+        }
+
+        .type-expense {
+            background: #FFEBEE;
+            color: #f44336;
+        }
+
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .transaction-form {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-wallet"></i> Personal Finance Tracker</h1>
+            <p>Track your income, expenses, and savings with this modern dashboard</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon income-icon">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="card-title">Total Income</div>
+                </div>
+                <div class="amount income-amount" id="totalIncome">$0.00</div>
+                <div class="change positive">+12% from last month</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon expense-icon">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="card-title">Total Expenses</div>
+                </div>
+                <div class="amount expense-amount" id="totalExpenses">$0.00</div>
+                <div class="change negative">+5% from last month</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon savings-icon">
+                        <i class="fas fa-piggy-bank"></i>
+                    </div>
+                    <div class="card-title">Savings</div>
+                </div>
+                <div class="amount savings-amount" id="totalSavings">$0.00</div>
+                <div class="change positive">+8% from last month</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon budget-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div class="card-title">Budget Remaining</div>
+                </div>
+                <div class="amount budget-amount" id="budgetRemaining">$0.00</div>
+                <div class="change positive">On track</div>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <div class="chart-card">
+                <div class="chart-title">Expense Categories</div>
+                <canvas id="expenseChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Monthly Trend</div>
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="transactions-section">
+            <div class="section-title">Add New Transaction</div>
+            <form class="transaction-form" id="transactionForm">
+                <div class="form-group">
+                    <label for="type">Type</label>
+                    <select id="type" required>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Amount</label>
+                    <input type="number" id="amount" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" required>
+                        <option value="salary">Salary</option>
+                        <option value="freelance">Freelance</option>
+                        <option value="investment">Investment</option>
+                        <option value="food">Food & Dining</option>
+                        <option value="transportation">Transportation</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="utilities">Utilities</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <input type="text" id="description" required>
+                </div>
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Add Transaction</button>
+                </div>
+            </form>
+
+            <div class="section-title">Recent Transactions</div>
+            <table class="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsTable">
+                    <!-- Transactions will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Sample data
+        let transactions = [
+            { id: 1, type: 'income', amount: 5000, category: 'salary', description: 'Monthly Salary', date: '2024-01-01' },
+            { id: 2, type: 'expense', amount: 1200, category: 'food', description: 'Groceries', date: '2024-01-02' },
+            { id: 3, type: 'expense', amount: 300, category: 'transportation', description: 'Gas & Public Transport', date: '2024-01-03' },
+            { id: 4, type: 'expense', amount: 800, category: 'utilities', description: 'Electricity & Water', date: '2024-01-04' },
+            { id: 5, type: 'income', amount: 500, category: 'freelance', description: 'Freelance Project', date: '2024-01-05' }
+        ];
+
+        // Initialize dashboard
+        function initDashboard() {
+            updateSummary();
+            updateTransactionsTable();
+            createExpenseChart();
+            createTrendChart();
+            setCurrentDate();
+        }
+
+        // Update summary cards
+        function updateSummary() {
+            const totalIncome = transactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const totalExpenses = transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const totalSavings = totalIncome - totalExpenses;
+            const budgetRemaining = 3000 - totalExpenses; // Assuming $3000 monthly budget
+
+            document.getElementById('totalIncome').textContent = `$${totalIncome.toLocaleString()}`;
+            document.getElementById('totalExpenses').textContent = `$${totalExpenses.toLocaleString()}`;
+            document.getElementById('totalSavings').textContent = `$${totalSavings.toLocaleString()}`;
+            document.getElementById('budgetRemaining').textContent = `$${budgetRemaining.toLocaleString()}`;
+        }
+
+        // Update transactions table
+        function updateTransactionsTable() {
+            const tbody = document.getElementById('transactionsTable');
+            tbody.innerHTML = '';
+
+            transactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${new Date(transaction.date).toLocaleDateString()}</td>
+                    <td>${transaction.description}</td>
+                    <td>${transaction.category}</td>
+                    <td><span class="transaction-type type-${transaction.type}">${transaction.type}</span></td>
+                    <td>$${transaction.amount.toLocaleString()}</td>
+                    <td><button class="delete-btn" onclick="deleteTransaction(${transaction.id})">Delete</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Create expense chart
+        function createExpenseChart() {
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            const expenseData = {};
+            
+            transactions.filter(t => t.type === 'expense').forEach(t => {
+                expenseData[t.category] = (expenseData[t.category] || 0) + t.amount;
+            });
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(expenseData),
+                    datasets: [{
+                        data: Object.values(expenseData),
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF',
+                            '#FF9F40'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Create trend chart
+        function createTrendChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            const monthlyData = {};
+            
+            transactions.forEach(t => {
+                const month = new Date(t.date).toLocaleDateString('en-US', { month: 'short' });
+                if (!monthlyData[month]) {
+                    monthlyData[month] = { income: 0, expense: 0 };
+                }
+                monthlyData[month][t.type] += t.amount;
+            });
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(monthlyData),
+                    datasets: [{
+                        label: 'Income',
+                        data: Object.values(monthlyData).map(d => d.income),
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Expenses',
+                        data: Object.values(monthlyData).map(d => d.expense),
+                        borderColor: '#f44336',
+                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        }
+
+        // Add new transaction
+        document.getElementById('transactionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newTransaction = {
+                id: transactions.length + 1,
+                type: document.getElementById('type').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                category: document.getElementById('category').value,
+                description: document.getElementById('description').value,
+                date: document.getElementById('date').value
+            };
+            
+            transactions.push(newTransaction);
+            updateSummary();
+            updateTransactionsTable();
+            createExpenseChart();
+            createTrendChart();
+            
+            // Reset form
+            document.getElementById('transactionForm').reset();
+            setCurrentDate();
+        });
+
+        // Delete transaction
+        function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            updateSummary();
+            updateTransactionsTable();
+            createExpenseChart();
+            createTrendChart();
+        }
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
